@@ -1,142 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Audio Messages</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            text-align: center;
-        }
-        .message {
-            max-width: 600px;
-            margin: 20px;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        #audioVisualizer {
-            width: 100%;
-            height: 100px;
-            background: #f0f0f0;
-            margin-top: 20px;
-        }
-        #playButton {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            background-color: #007BFF;
-            color: white;
-            cursor: pointer;
-        }
-        #playButton:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <title>Muted Autoplay Workaround</title>
 </head>
 <body>
-    <div class="message">
-        <h1>💝 Random Audio Message 💝</h1>
-        <audio id="audioMessage" style="display:none;"></audio>
-        <canvas id="audioVisualizer"></canvas>
-        <button id="playButton">Play Random Message</button>
-    </div>
+    <h1>🎵 Muted Autoplay Workaround 🎵</h1>
+    <p>The audio will play automatically. If it doesn't, click anywhere to start the audio.</p>
+    <audio id="audioElement" style="display: none;"></audio>
 
     <script>
         // List of local audio files
         const audioFiles = [
             'music/UCLA.mp3',
-            // Add more audio files here
+            // Add more files if necessary
         ];
 
-        const audioElement = document.getElementById('audioMessage');
-        const visualizer = document.getElementById('audioVisualizer');
-        const playButton = document.getElementById('playButton');
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let analyser;
+        const audioElement = document.getElementById('audioElement');
 
+        // Function to select a random audio file
         function selectRandomAudio() {
-            // Select a random audio file
             const randomIndex = Math.floor(Math.random() * audioFiles.length);
             return audioFiles[randomIndex];
         }
 
-        async function playAudio() {
-            // Reset analyser if it exists
-            if (analyser) {
-                analyser.disconnect();
-            }
+        // Function to play audio muted first, then unmute
+        async function playAudioMutedFirst() {
+            // Set the audio source to a random file
+            audioElement.src = selectRandomAudio();
+            audioElement.muted = true; // Start playback muted
 
             try {
-                // Set the audio source to a random file
-                audioElement.src = selectRandomAudio();
-
-                // Create audio context and analyser
-                const source = audioContext.createMediaElementSource(audioElement);
-                analyser = audioContext.createAnalyser();
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-
-                // Setup canvas visualizer
-                setupVisualizer();
-
-                // Play audio
+                // Attempt to autoplay
                 await audioElement.play();
+                console.log('Muted autoplay successful.');
+                audioElement.muted = false; // Unmute after playback starts
             } catch (error) {
-                console.error('Error playing audio:', error);
+                console.warn('Muted autoplay failed:', error);
+
+                // If autoplay fails, show a message prompting for user interaction
+                document.body.addEventListener('click', resumeAudioAfterInteraction, { once: true });
+                alert('Click anywhere to start the audio.');
             }
         }
 
-        function setupVisualizer() {
-            const canvasCtx = visualizer.getContext('2d');
-            visualizer.width = visualizer.offsetWidth || 600; // Default fallback
-            visualizer.height = visualizer.offsetHeight || 100;
-
-            analyser.fftSize = 256;
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-
-            function draw() {
-                requestAnimationFrame(draw);
-
-                analyser.getByteFrequencyData(dataArray);
-
-                canvasCtx.fillStyle = 'rgb(240, 240, 240)';
-                canvasCtx.fillRect(0, 0, visualizer.width, visualizer.height);
-
-                const barWidth = (visualizer.width / bufferLength) * 2.5;
-                let barHeight;
-                let x = 0;
-
-                for (let i = 0; i < bufferLength; i++) {
-                    barHeight = dataArray[i] / 2;
-
-                    canvasCtx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
-                    canvasCtx.fillRect(x, visualizer.height - barHeight, barWidth, barHeight);
-
-                    x += barWidth + 1;
-                }
+        // Function to resume audio after user interaction
+        async function resumeAudioAfterInteraction() {
+            try {
+                await audioElement.play();
+                console.log('Audio resumed successfully after interaction.');
+            } catch (error) {
+                console.error('Failed to resume audio:', error);
             }
-
-            draw();
         }
 
-        // Attach event listener to the play button
-        playButton.addEventListener('click', () => {
-            playAudio();
-        });
+        // Attempt muted autoplay on page load
+        window.addEventListener('load', playAudioMutedFirst);
     </script>
 </body>
 </html>
