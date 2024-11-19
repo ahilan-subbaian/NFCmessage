@@ -1,60 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Muted Autoplay Workaround</title>
+    <title>Safari Autoplay Workaround</title>
 </head>
 <body>
-    <h1>🎵 Muted Autoplay Workaround 🎵</h1>
-    <p>The audio will play automatically. If it doesn't, click anywhere to start the audio.</p>
+    <h1>🎵 Autoplay Workaround for Safari 🎵</h1>
+    <p>If the audio doesn’t start, tap anywhere to play.</p>
     <audio id="audioElement" style="display: none;"></audio>
 
     <script>
+        const audioElement = document.getElementById('audioElement');
+        let audioContext;
+        let audioSource;
+
         // List of local audio files
         const audioFiles = [
             'music/UCLA.mp3',
             // Add more files if necessary
         ];
 
-        const audioElement = document.getElementById('audioElement');
-
-        // Function to select a random audio file
+        // Select a random audio file
         function selectRandomAudio() {
             const randomIndex = Math.floor(Math.random() * audioFiles.length);
             return audioFiles[randomIndex];
         }
 
-        // Function to play audio muted first, then unmute
-        async function playAudioMutedFirst() {
-            // Set the audio source to a random file
-            audioElement.src = selectRandomAudio();
-            audioElement.muted = true; // Start playback muted
-
+        // Attempt to play the audio
+        async function playAudio() {
             try {
-                // Attempt to autoplay
-                await audioElement.play();
-                console.log('Muted autoplay successful.');
+                // Set the audio source to a random file
+                audioElement.src = selectRandomAudio();
+                audioElement.muted = true; // Start muted for autoplay compliance
+                await audioElement.play(); // Try autoplay
                 audioElement.muted = false; // Unmute after playback starts
+                console.log('Audio autoplayed successfully.');
             } catch (error) {
-                console.warn('Muted autoplay failed:', error);
+                console.warn('Autoplay blocked:', error);
 
-                // If autoplay fails, show a message prompting for user interaction
-                document.body.addEventListener('click', resumeAudioAfterInteraction, { once: true });
-                alert('Click anywhere to start the audio.');
+                // Prompt user interaction if autoplay fails
+                alert('Tap anywhere to enable audio.');
+                document.body.addEventListener('click', userGestureHandler, { once: true });
             }
         }
 
-        // Function to resume audio after user interaction
-        async function resumeAudioAfterInteraction() {
+        // Handle user interaction
+        async function userGestureHandler() {
             try {
+                // Resume AudioContext for Safari compatibility
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    audioSource = audioContext.createMediaElementSource(audioElement);
+                    audioSource.connect(audioContext.destination);
+                }
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                    console.log('AudioContext resumed.');
+                }
+
+                // Play audio
                 await audioElement.play();
-                console.log('Audio resumed successfully after interaction.');
+                console.log('Audio played after user interaction.');
             } catch (error) {
-                console.error('Failed to resume audio:', error);
+                console.error('Audio playback failed after user interaction:', error);
             }
         }
 
-        // Attempt muted autoplay on page load
-        window.addEventListener('load', playAudioMutedFirst);
+        // Try to autoplay on page load
+        window.addEventListener('load', playAudio);
     </script>
 </body>
 </html>
