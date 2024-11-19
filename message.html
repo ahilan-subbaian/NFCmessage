@@ -31,6 +31,19 @@
             background: #f0f0f0;
             margin-top: 20px;
         }
+        #playButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+        #playButton:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -38,19 +51,19 @@
         <h1>💝 Random Audio Message 💝</h1>
         <audio id="audioMessage" style="display:none;"></audio>
         <canvas id="audioVisualizer"></canvas>
+        <button id="playButton">Play Random Message</button>
     </div>
 
     <script>
         // List of local audio files
         const audioFiles = [
             'music/UCLA.mp3',
-            // 'audio-messages/message2.mp3',
-            // 'audio-messages/message3.mp3'
             // Add more audio files here
         ];
 
         const audioElement = document.getElementById('audioMessage');
         const visualizer = document.getElementById('audioVisualizer');
+        const playButton = document.getElementById('playButton');
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let analyser;
 
@@ -88,8 +101,8 @@
 
         function setupVisualizer() {
             const canvasCtx = visualizer.getContext('2d');
-            visualizer.width = visualizer.offsetWidth;
-            visualizer.height = visualizer.offsetHeight;
+            visualizer.width = visualizer.offsetWidth || 600; // Default fallback
+            visualizer.height = visualizer.offsetHeight || 100;
 
             analyser.fftSize = 256;
             const bufferLength = analyser.frequencyBinCount;
@@ -107,7 +120,7 @@
                 let barHeight;
                 let x = 0;
 
-                for(let i = 0; i < bufferLength; i++) {
+                for (let i = 0; i < bufferLength; i++) {
                     barHeight = dataArray[i] / 2;
 
                     canvasCtx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
@@ -120,10 +133,9 @@
             draw();
         }
 
-        // Auto-play when page loads
-        window.addEventListener('load', () => {
-            // Small delay to ensure it works on mobile
-            setTimeout(playAudio, 1000);
+        // Attach event listener to the play button
+        playButton.addEventListener('click', () => {
+            playAudio();
         });
     </script>
 </body>
