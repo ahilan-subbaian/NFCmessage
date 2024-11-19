@@ -1,1 +1,130 @@
-<Title>Hello</Title>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Audio Messages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            text-align: center;
+        }
+        .message {
+            max-width: 600px;
+            margin: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        #audioVisualizer {
+            width: 100%;
+            height: 100px;
+            background: #f0f0f0;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="message">
+        <h1>💝 Random Audio Message 💝</h1>
+        <audio id="audioMessage" style="display:none;"></audio>
+        <canvas id="audioVisualizer"></canvas>
+    </div>
+
+    <script>
+        // List of local audio files
+        const audioFiles = [
+            'music/UCLA.mp3',
+            // 'audio-messages/message2.mp3',
+            // 'audio-messages/message3.mp3'
+            // Add more audio files here
+        ];
+
+        const audioElement = document.getElementById('audioMessage');
+        const visualizer = document.getElementById('audioVisualizer');
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let analyser;
+
+        function selectRandomAudio() {
+            // Select a random audio file
+            const randomIndex = Math.floor(Math.random() * audioFiles.length);
+            return audioFiles[randomIndex];
+        }
+
+        async function playAudio() {
+            // Reset analyser if it exists
+            if (analyser) {
+                analyser.disconnect();
+            }
+
+            try {
+                // Set the audio source to a random file
+                audioElement.src = selectRandomAudio();
+
+                // Create audio context and analyser
+                const source = audioContext.createMediaElementSource(audioElement);
+                analyser = audioContext.createAnalyser();
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+
+                // Setup canvas visualizer
+                setupVisualizer();
+
+                // Play audio
+                await audioElement.play();
+            } catch (error) {
+                console.error('Error playing audio:', error);
+            }
+        }
+
+        function setupVisualizer() {
+            const canvasCtx = visualizer.getContext('2d');
+            visualizer.width = visualizer.offsetWidth;
+            visualizer.height = visualizer.offsetHeight;
+
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                requestAnimationFrame(draw);
+
+                analyser.getByteFrequencyData(dataArray);
+
+                canvasCtx.fillStyle = 'rgb(240, 240, 240)';
+                canvasCtx.fillRect(0, 0, visualizer.width, visualizer.height);
+
+                const barWidth = (visualizer.width / bufferLength) * 2.5;
+                let barHeight;
+                let x = 0;
+
+                for(let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i] / 2;
+
+                    canvasCtx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
+                    canvasCtx.fillRect(x, visualizer.height - barHeight, barWidth, barHeight);
+
+                    x += barWidth + 1;
+                }
+            }
+
+            draw();
+        }
+
+        // Auto-play when page loads
+        window.addEventListener('load', () => {
+            // Small delay to ensure it works on mobile
+            setTimeout(playAudio, 1000);
+        });
+    </script>
+</body>
+</html>
