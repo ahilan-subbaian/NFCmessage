@@ -14,28 +14,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.COMMIT_NFC }}
+          
       - name: Set up Python
         uses: actions/setup-python@v2
+
       - name: Find audio folders and generate JSON
         run: |
           for d in */; do
-            if ls "$d"/*.{m4a,mp3,wav,ogg,aac} >/dev/null 2>&1; then
+            if [ -d "$d" ] && ls "$d"/*.{m4a,mp3,wav,ogg,aac} >/dev/null 2>&1; then
               python createMusicJson.py "$d"
             fi
           done
+
       - name: Configure Git
         run: |
           git config --local user.email "ahilmails@yahoo.com"
           git config --local user.name "ahilan-subbaian"
-      
+
+      - name: Log Git Status (Before Commit)
+        run: git status
+
       - name: Commit changes
         run: |
           git add */music.json
           git commit -m "Update music.json files" || echo "No changes to commit"
-    
+
+      - name: Log Git Status (Before Push)
+        run: git status
+
       - name: Push changes
         env:
-          GH_TOKEN: ${{ secrets.COMMITACTIONS }}
+          GH_TOKEN: ${{ secrets.COMMIT_NFC }}
         run: |
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/ahilan-subbaian/NFCmessage.git
           git push origin main
