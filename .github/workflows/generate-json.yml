@@ -25,6 +25,8 @@ jobs:
           done
       - name: Commit changes
         run: |
+          git config --local user.email "ahilmails@yahoo.com"
+          git config --local user.name "ahilan-subbaian"
           git add */music.json
           git commit -m "Update music.json files" || echo "No changes to commit"
           git push
