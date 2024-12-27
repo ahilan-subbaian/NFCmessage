@@ -29,12 +29,17 @@ jobs:
 
       - name: Find audio folders and generate JSON
         run: |
+          shopt -s nullglob
           for d in */; do
-            if [ -d "$d" ] && ls "$d"/*.{m4a,mp3,wav,ogg,aac} >/dev/null 2>&1; then
+            files=("$d"/*.{m4a,mp3,wav,ogg,aac})
+            if [ ${#files[@]} -gt 0 ]; then
               echo "Processing directory: $d"
-              python createMusicJson.py "$d" || echo "Error processing $d"
+              python createMusicJson.py "$d"
+            else
+              echo "No audio files in $d"
             fi
           done
+          shopt -u nullglob
 
       - name: Log Git Status After Script
         run: git status
