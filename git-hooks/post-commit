@@ -1,0 +1,18 @@
+#!/bin/bash
+# Post-commit hook to generate and commit music.json files
+
+echo "Running post-commit hook: Generating music.json files..."
+
+# Loop through directories and run the Python script
+for folder in */; do
+    echo "Checking directory: $folder"
+    if find "$folder" -maxdepth 1 -type f \( -iname "*.m4a" -o -iname "*.mp3" -o -iname "*.wav" -o -iname "*.ogg" -o -iname "*.aac" \) | grep -q .; then
+        /opt/homebrew/bin/python3 createMusicJson.py "$folder"
+    else
+        echo "No audio files found in $folder"
+    fi
+done
+
+# Stage and commit changes if music.json files were updated
+git add */music.json
+git commit -m "Auto-update music.json files" || echo "No changes to commit"
