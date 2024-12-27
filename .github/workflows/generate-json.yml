@@ -16,32 +16,40 @@ jobs:
       - uses: actions/checkout@v2
         with:
           token: ${{ secrets.COMMIT_NFC }}
-          
+
       - name: Set up Python
         uses: actions/setup-python@v2
+
+      - name: Debug Audio Files
+        run: |
+          for d in */; do
+            echo "Checking directory: $d"
+            ls "$d"/*.{m4a,mp3,wav,ogg,aac} 2>/dev/null || echo "No audio files in $d"
+          done
 
       - name: Find audio folders and generate JSON
         run: |
           for d in */; do
             if [ -d "$d" ] && ls "$d"/*.{m4a,mp3,wav,ogg,aac} >/dev/null 2>&1; then
-              python createMusicJson.py "$d"
+              echo "Processing directory: $d"
+              python createMusicJson.py "$d" || echo "Error processing $d"
             fi
           done
+
+      - name: Log Git Status After Script
+        run: git status
 
       - name: Configure Git
         run: |
           git config --local user.email "ahilmails@yahoo.com"
           git config --local user.name "ahilan-subbaian"
 
-      - name: Log Git Status (Before Commit)
-        run: git status
-
       - name: Commit changes
         run: |
           git add */music.json
           git commit -m "Update music.json files" || echo "No changes to commit"
 
-      - name: Log Git Status (Before Push)
+      - name: Log Git Status After Commit
         run: git status
 
       - name: Push changes
