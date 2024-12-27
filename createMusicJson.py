@@ -12,9 +12,12 @@ def create_url_json(folder_path, base_url="https://ahilan-subbaian.github.io/NFC
         file_name, ext = os.path.splitext(file)
         url = f"{base_url}/{folder_name}/{file_name}{ext}"
         urls.append(url)
-        
+    
     json_data = {"files": urls}
     output_file = f"{folder_name}/music.json"
+
+    print(folder_name)
+    print(output_file)
     
     with open(output_file, 'w') as f:
         json.dump(json_data, f, indent=2)
