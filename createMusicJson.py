@@ -3,13 +3,14 @@ import json
 import sys
 
 def create_url_json(folder_path, base_url="https://ahilan-subbaian.github.io/NFCmessage"):
-    files = [f for f in os.listdir(folder_path) if f.endswith('.m4a')]
+    audio_extensions = ('.m4a', '.mp3')
+    files = [f for f in os.listdir(folder_path) if f.endswith(audio_extensions)]
     folder_name = os.path.basename(folder_path)
     
     urls = []
     for file in files:
-        file_name = os.path.splitext(file)[0]
-        url = f"{base_url}/{folder_name}/{file_name}.m4a"
+        file_name, ext = os.path.splitext(file)
+        url = f"{base_url}/{folder_name}/{file_name}{ext}"
         urls.append(url)
         
     json_data = {"files": urls}

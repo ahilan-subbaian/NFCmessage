@@ -1,0 +1,30 @@
+name: Generate Music JSON Files
+
+on:
+  push:
+    paths:
+      - '**/*.m4a'
+      - '**/*.mp3'
+      - '**/*.wav'
+      - '**/*.ogg'
+      - '**/*.aac'
+
+jobs:
+  generate-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+      - name: Find audio folders and generate JSON
+        run: |
+          for d in */; do
+            if ls "$d"/*.{m4a,mp3,wav,ogg,aac} >/dev/null 2>&1; then
+              python createMusicJson.py "$d"
+            fi
+          done
+      - name: Commit changes
+        run: |
+          git add */music.json
+          git commit -m "Update music.json files" || echo "No changes to commit"
+          git push
