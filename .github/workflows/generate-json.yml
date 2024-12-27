@@ -23,10 +23,19 @@ jobs:
               python createMusicJson.py "$d"
             fi
           done
-      - name: Commit changes
+      - name: Configure Git
         run: |
           git config --local user.email "ahilmails@yahoo.com"
           git config --local user.name "ahilan-subbaian"
+      
+      - name: Commit changes
+        run: |
           git add */music.json
           git commit -m "Update music.json files" || echo "No changes to commit"
-          git push
+    
+      - name: Push changes
+        env:
+          GH_TOKEN: ${{ secrets.COMMITACTIONS }}
+        run: |
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/ahilan-subbaian/NFCmessage.git
+          git push origin main
